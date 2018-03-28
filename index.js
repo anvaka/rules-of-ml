@@ -1,3 +1,4 @@
+var onClap = require('clap.js');
 var colors = ['#58A55C', '#5186EC', '#D95040', '#F2BD42'];
 var levelStep = 42;
 var initialRadius = 100;
@@ -24,7 +25,8 @@ var tooltipManager = createTooltipManager(document.querySelector('.tooltip'));
 var textReader = createTextReader(document.querySelector('.content'));
 
 document.body.addEventListener('mousemove', handleMouseMove);
-document.body.addEventListener('click', handleMouseClick);
+onClap(document.body, handleMouseClick);
+// document.body.addEventListener('click', handleMouseClick);
 document.querySelector('.close').addEventListener('click', closeDetails);
 
 function closeDetails() {

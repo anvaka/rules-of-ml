@@ -1,5 +1,8 @@
 {
   "scripts": {
     "start": "browserify index.js > bundle.js"
+  },
+  "dependencies": {
+    "clap.js": "^1.0.0"
   }
 }

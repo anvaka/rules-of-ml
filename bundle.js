@@ -99,22 +99,55 @@ function getData() {
     }] };
 }
 },{}],2:[function(require,module,exports){
+/**
+ * Copyright 2018 Andrei Kashcha (http://github.com/anvaka)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify,
+ * merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all copies
+ * or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+ * PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+ * FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 module.exports = getSunBurstPath;
 
+/**
+ * For a given tree, builds SVG path that renders SunBurst
+ * diagram
+ * 
+ * @param {Object} tree - a regular javascript object with single
+ * property: tree.children - array of tree-children.
+ * 
+ * @param {Object} options - see below.
+ */
 function getSunBurstPath(tree, options) {
   // TODO: Validate options
   options = options || {};
 
+  // Radius of the inner circle.
   var initialRadius = options.initialRadius;
+  // width of a single level
   var levelStep = options.levelStep;
+  // Array of colors. Applied only on the top level.
   var colors = options.colors;
 
+  // Initial rotation of the circle in radians.
+  var startAngle = options.startAngle || 0;
+
+  // Below is implementation.
   var totalLeaves = countLeaves(tree);
   var pathElements = [];
   pathElements.push(circle(initialRadius));
 
   var level = 1;
-  var startAngle = options.startAngle || 0;
 
   var path = '0';
   tree.path = path; // TODO: Don't really need to do this.
@@ -172,6 +205,7 @@ function arcSegment(radius, startAngle, endAngle) {
   var da = Math.abs(startAngle - endAngle);
   var flip = da > Math.PI ? 1 : 0;
   var d = ["M", start.x, start.y, "A", radius, radius, 0, flip, forward, end.x, end.y].join(" ");
+
   return {
     d: d,
     start: start,
@@ -213,6 +247,7 @@ function countLeaves(treeNode) {
   return leaves;
 }
 },{}],3:[function(require,module,exports){
+var onClap = require('clap.js');
 var colors = ['#58A55C', '#5186EC', '#D95040', '#F2BD42'];
 var levelStep = 42;
 var initialRadius = 100;
@@ -239,7 +274,8 @@ var tooltipManager = createTooltipManager(document.querySelector('.tooltip'));
 var textReader = createTextReader(document.querySelector('.content'));
 
 document.body.addEventListener('mousemove', handleMouseMove);
-document.body.addEventListener('click', handleMouseClick);
+onClap(document.body, handleMouseClick);
+// document.body.addEventListener('click', handleMouseClick);
 document.querySelector('.close').addEventListener('click', closeDetails);
 
 function closeDetails() {
@@ -396,4 +432,69 @@ function makeOrderedChildren(tree) {
     }
   }
 }
-},{"./data.js":1,"./get-sunburst-path.js":2}]},{},[3]);
+},{"./data.js":1,"./get-sunburst-path.js":2,"clap.js":4}],4:[function(require,module,exports){
+module.exports = onClap;
+
+function onClap(el, fn, config) {
+  var touchStartTime;
+  var startPos;
+  config = config || {};
+  if (typeof config.maxSingleTouchTime !== 'number') {
+    config.maxSingleTouchTime = 300; // ms
+  }
+  if (typeof config.singleTapDistanceSquared !== 'number') {
+    config.singleTapDistanceSquared = 25;
+  }
+
+  if (typeof fn !== 'function') throw new Error('callback is required') 
+
+  el.addEventListener('click', invokeHandler)
+
+  el.addEventListener('touchend', handleTouchEnd)
+  el.addEventListener('touchstart', handleTouchStart)
+
+  return disposePrevHandler;
+
+  function handleTouchStart(e) {
+    var touches = e.touches
+
+    if (touches.length === 1) {
+      touchStartTime = new Date()
+      startPos = {
+        x: e.touches[0].pageX,
+        y: e.touches[0].pageY
+      }
+    }
+  }
+
+  function handleTouchEnd(e) {
+    // multitouch - ignore
+    if (e.touches.length > 1) return
+
+    // single touch - use time diference to determine if it was a touch or
+    // a swipe
+    var dt = new Date() - touchStartTime
+
+    // To long - ignore
+    if (dt > config.maxSingleTouchTime) return
+
+    var dx = e.pageX - startPos.x
+    var dy = e.pageY - startPos.y
+
+    if (dx * dx + dy * dy < config.singleTapDistanceSquared) {
+      invokeHandler(e)
+    }
+  }
+
+  function disposePrevHandler() {
+    el.removeEventListener('click', invokeHandler)
+    el.removeEventListener('touchend', handleTouchEnd)
+    el.removeEventListener('touchstart', handleTouchStart)
+  }
+
+  function invokeHandler(e) {
+    fn(e)
+  }
+}
+
+},{}]},{},[3]);
