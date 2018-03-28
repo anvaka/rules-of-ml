@@ -17,3 +17,10 @@ Turns out there is a name for this visualization type: [SunBurst](https://www.cc
 
 The entire visualization code is [here](https://github.com/anvaka/rules-of-ml/blob/master/get-sunburst-path.js).
 It is raw javascript, and it doesn't use any third-party libraries.
+
+# License
+
+The code that generates sunburst chart is released under MIT license.
+
+Article content belongs to [Martin Zinkevich](http://martin.zinkevich.org/).
+Please reach out to him directly if you need more information.
