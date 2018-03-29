@@ -16,7 +16,8 @@ var path = getSunBurstPath(tree.children[0], {
   levelStep: levelStep,
   initialRadius: initialRadius,
   // Rotate it a bit, so that part 0 starts at the top.
-  startAngle: -Math.PI / 2 - 0.21918088280859022
+  startAngle: -Math.PI / 2 - 0.21918088280859022,
+  stroke: 'white'
 });
 var scene = document.getElementById('scene');
 scene.innerHTML = path;

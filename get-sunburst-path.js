@@ -32,14 +32,19 @@ function getSunBurstPath(tree, options) {
   options = options || {};
 
   // Radius of the inner circle.
-  var initialRadius = options.initialRadius;
+  var initialRadius = getNumber(options.initialRadius, 100);
   // width of a single level
-  var levelStep = options.levelStep;
+  var levelStep = getNumber(options.levelStep, 10);
   // Array of colors. Applied only on the top level.
   var colors = options.colors;
+  if (!colors) colors = ['#f2ad52', '#e99e9b', '#ed684c', '#c03657', '#642b1c', '#132a4e'];
 
   // Initial rotation of the circle in radians.
-  var startAngle = options.startAngle || 0;
+  var startAngle = getNumber(options.startAngle, 0);
+
+  var wrap = options.wrap;
+  var stroke = options.stroke;
+  var strokeWidth = options.strokeWidth;
 
   // Below is implementation.
   var totalLeaves = countLeaves(tree);
@@ -49,14 +54,15 @@ function getSunBurstPath(tree, options) {
   var level = 1;
 
   var path = '0';
-  tree.path = path; // TODO: Don't really need to do this.
+  tree.path = path; // TODO: Don't really need to do this?
+
   tree.children.forEach(function (child, i) {
     var da = 2 * Math.PI * child.leaves / totalLeaves;
     var endAngle = startAngle + da;
     var arcPath = pieSlice(initialRadius, level * levelStep, startAngle, endAngle);
     var thisPath = path + ':' + i;
     child.path = thisPath;
-    var baseColor = colors[i % colors.length];
+    var baseColor = getColor(child, i); 
     pathElements.push(arc(arcPath, baseColor, 0, thisPath));
 
     drawChildren(startAngle, endAngle, child, pathElements, level, baseColor, thisPath);
@@ -64,7 +70,21 @@ function getSunBurstPath(tree, options) {
     startAngle += da;
   });
 
-  return pathElements.join('\n');
+  var sunBurstPaths = pathElements.join('\n');
+
+  if (wrap) {
+    return wrapIntoSVG(sunBurstPaths);
+  }
+
+  return sunBurstPaths;
+
+  function wrapIntoSVG(paths) {
+    var depth = getDepth(tree, 0);
+    var min = depth * levelStep + initialRadius;
+    return '<svg viewBox="' + [-min, -min, min * 2, min * 2].join(' ') + '">' + 
+      '<g id="scene">' + paths + '</g>' +
+    '</svg>';
+  }
 
   function drawChildren(startAngle, endAngle, tree, pathElements, level, color, path) {
     if (!tree.children) return;
@@ -84,6 +104,29 @@ function getSunBurstPath(tree, options) {
       startAngle += da;
     });
   }
+
+  function getColor(element, i) {
+    return colors[i % colors.length];
+  }
+
+  function arc(pathData, color, level, path) {
+    level = getNumber(level, 0);
+
+    // TODO: don't hard-code colors.
+    var pathMarkup = '<path d="' + pathData + '" fill="' + color + '" class="arc level-' + level + '" data-path="' + path + '" ';
+
+    if (stroke) {
+      pathMarkup += ' stroke="' + stroke +'" ';
+    }
+
+    if (strokeWidth) {
+      pathMarkup += ' stroke-width="' + strokeWidth + '" ';
+    }
+    pathMarkup += '></path>'
+
+    return pathMarkup;
+  }
+
 }
 
 function polarToCartesian(centerX, centerY, radius, angle) {
@@ -123,14 +166,6 @@ function circle(r) {
   return '<circle r=' + r + ' cx=0 cy=0 fill="#fafafa" data-path="0"></circle>';
 }
 
-function arc(pathData, color) {
-  var level = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
-  var path = arguments[3];
-
-  // TODO: don't hard-code colors.
-  return '<path d="' + pathData + '" stroke="white" fill="' + color + '" class="arc level-' + level + '" data-path="' + path + '"></path>';
-}
-
 function countLeaves(treeNode) {
   if (treeNode.leaves) return treeNode.leaves;
 
@@ -145,3 +180,26 @@ function countLeaves(treeNode) {
   treeNode.leaves = leaves;
   return leaves;
 }
+
+function getDepth(tree) {
+  var maxDepth = 0;
+
+  visit(tree, 0);
+
+  return maxDepth;
+
+
+  function visit(tree, depth) {
+    if (tree.children) {
+      tree.children.forEach(function(child) {
+        visit(child, depth + 1);
+      });
+    }
+    if (depth > maxDepth) maxDepth = depth;
+  }
+}
+
+function getNumber(x, defaultNumber) {
+  return Number.isFinite(x) ? x : defaultNumber;
+}
+
