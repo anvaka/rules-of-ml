@@ -45,6 +45,7 @@ function getSunBurstPath(tree, options) {
   var wrap = options.wrap;
   var stroke = options.stroke;
   var strokeWidth = options.strokeWidth;
+  var beforeClose = options.beforeClose;
 
   // Below is implementation.
   var totalLeaves = countLeaves(tree);
@@ -63,7 +64,7 @@ function getSunBurstPath(tree, options) {
     var thisPath = path + ':' + i;
     child.path = thisPath;
     var baseColor = getColor(child, i); 
-    pathElements.push(arc(arcPath, baseColor, 0, thisPath));
+    pathElements.push(arc(arcPath, baseColor, 0, thisPath, child));
 
     drawChildren(startAngle, endAngle, child, pathElements, level, baseColor, thisPath);
 
@@ -97,7 +98,7 @@ function getSunBurstPath(tree, options) {
       var arcPath = pieSlice(initialRadius + level * levelStep, levelStep, startAngle, endAngle);
       var thisPath = path + ':' + i;
       child.path = thisPath;
-      pathElements.push(arc(arcPath, color, level, thisPath));
+      pathElements.push(arc(arcPath, child.color || color, level, thisPath, child));
 
       drawChildren(startAngle, endAngle, child, pathElements, level + 1, color, thisPath);
 
@@ -106,13 +107,12 @@ function getSunBurstPath(tree, options) {
   }
 
   function getColor(element, i) {
+    if (element.color) return element.color;
+
     return colors[i % colors.length];
   }
 
-  function arc(pathData, color, level, path) {
-    level = getNumber(level, 0);
-
-    // TODO: don't hard-code colors.
+  function arc(pathData, color, level, path, child) {
     var pathMarkup = '<path d="' + pathData + '" fill="' + color + '" class="arc level-' + level + '" data-path="' + path + '" ';
 
     if (stroke) {
@@ -122,11 +122,15 @@ function getSunBurstPath(tree, options) {
     if (strokeWidth) {
       pathMarkup += ' stroke-width="' + strokeWidth + '" ';
     }
+    if (beforeClose) {
+      pathMarkup += beforeClose(child);
+    }
+
     pathMarkup += '></path>'
+
 
     return pathMarkup;
   }
-
 }
 
 function polarToCartesian(centerX, centerY, radius, angle) {
@@ -202,4 +206,3 @@ function getDepth(tree) {
 function getNumber(x, defaultNumber) {
   return Number.isFinite(x) ? x : defaultNumber;
 }
-
