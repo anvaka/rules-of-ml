@@ -119,6 +119,7 @@ a {
 
 body {
   position: absolute;
+  overflow: hidden;
   top: 0;
   left: 0;
   width: 100%;
@@ -126,8 +127,6 @@ body {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-body {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -147,14 +146,26 @@ h2, h3 {
   text-align: center;
   font-weight: normal;
 }
-.about {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  text-align: right;
-}
-.about p {
+.header h3 {
   margin: 0;
+}
+
+.header h2 {
+  margin: 8px;
+}
+
+.about {
+  text-align: right;
+  color: #757575;
+  font-style: italic;
+  margin-bottom: 8px;
+  margin-right: 8px;
+  margin-left: auto;
+  width: 400px;
+  font-size: 12px;
+}
+.about a {
+  text-decoration: none;
 }
 a.first-part {
   background-color: #58A55C;
@@ -204,21 +215,11 @@ a.fourth-part {
             flex: 0;
   }
   .about {
-    display: -webkit-box;
-    display: -ms-flexbox;
-    display: flex;
     width: 100%;
-    -ms-flex-pack: distribute;
-        justify-content: space-around;
-    -webkit-box-align: center;
-        -ms-flex-align: center;
-            align-items: center;
     padding: 0 8px;
-    font-size: 12px;
+    font-size: 8px;
+    position: absolute;
     bottom: 0;
-    left: 0;
-    right: 0;
-    height: 42px;
   }
 }
   </style>
@@ -243,12 +244,13 @@ a.fourth-part {
     <svg viewBox='-250 -250 500 500'>
       <g id='scene'></g>
     </svg>
+    <div class='about'>
+      This work, is a derivative of <a href='https://developers.google.com/machine-learning/rules-of-ml/'>Rules of Machine Learning</a>
+      by <a href='http://martin.zinkevich.org/'>Martin Zinkevich</a>, used under <a href='https://creativecommons.org/licenses/by/3.0/'>CC BY 3.0</a>.
+      Visualizaiton created by <a href='https://twitter.com/anvaka'>Andrei Kashcha</a>
+    </div>
   </div>
   <div class="tooltip"></div>
-  <div class='about'>
-    <p>content: <a href='http://martin.zinkevich.org/'>Martin Zinkevich</a></p>
-    <p>visualization: <a href='https://twitter.com/anvaka'>Andrei Kashcha</a></p>
-  </div>
   <script src='bundle.js'></script>
   <script>
     (function (){
