@@ -133,41 +133,83 @@ function getSunBurstPath(tree, options) {
   options = options || {};
 
   // Radius of the inner circle.
-  var initialRadius = options.initialRadius;
+  var initialRadius = getNumber(options.initialRadius, 100);
   // width of a single level
-  var levelStep = options.levelStep;
+  var levelStep = getNumber(options.levelStep, 10);
   // Array of colors. Applied only on the top level.
   var colors = options.colors;
+  if (!colors) colors = ['#f2ad52', '#e99e9b', '#ed684c', '#c03657', '#642b1c', '#132a4e'];
 
   // Initial rotation of the circle in radians.
-  var startAngle = options.startAngle || 0;
+  var startAngle = getNumber(options.startAngle, 0);
+
+  var wrap = options.wrap;
+  var stroke = options.stroke;
+  var strokeWidth = options.strokeWidth;
+  var beforeClose = options.beforeClose;
 
   // Below is implementation.
   var totalLeaves = countLeaves(tree);
-  var pathElements = [];
-  pathElements.push(circle(initialRadius));
+  var svgElements = [];
+  svgElements.push(circle(initialRadius));
+  if (options.centerText) {
+    svgElements.push('<text text-anchor="middle" class="center-text" y="8">' + options.centerText + '</text>');
+  }
 
   var level = 1;
 
   var path = '0';
-  tree.path = path; // TODO: Don't really need to do this.
+  tree.path = path; // TODO: Don't really need to do this?
+
   tree.children.forEach(function (child, i) {
-    var da = 2 * Math.PI * child.leaves / totalLeaves;
-    var endAngle = startAngle + da;
-    var arcPath = pieSlice(initialRadius, level * levelStep, startAngle, endAngle);
+    // if child prefers explicit placement - respect it.
+    var endAngle, thisStartAngle;
+    if (child.startAngle !== undefined && child.endAngle !== undefined) {
+      thisStartAngle = child.startAngle;
+      endAngle = child.endAngle;
+    } else {
+      // otherwise just count based on number of leaves. Note: we may end up
+      // in inconsistent state if some children use explicit placement
+      // while the other don't. Explicit placement is advanced feature,
+      // and I hope that if you use it, you understand the responsibility.
+      thisStartAngle = startAngle;
+      endAngle = startAngle + 2 * Math.PI * child.leaves / totalLeaves;
+
+      startAngle = endAngle;
+    }
+
     var thisPath = path + ':' + i;
     child.path = thisPath;
-    var baseColor = colors[i % colors.length];
-    pathElements.push(arc(arcPath, baseColor, 0, thisPath));
 
-    drawChildren(startAngle, endAngle, child, pathElements, level, baseColor, thisPath);
+    if (thisStartAngle !== endAngle) {
+      // we don't want to draw empty slices.
+      var arcPath = pieSlice(initialRadius, level * levelStep, thisStartAngle, endAngle);
+      var baseColor = getColor(child, i); 
+      svgElements.push(arc(arcPath, baseColor, 0, child));
+    }
 
-    startAngle += da;
+    // descend to children.
+    drawChildren(thisStartAngle, endAngle, child, svgElements, level, baseColor, thisPath);
   });
 
-  return pathElements.join('\n');
+  var sunBurstPaths = svgElements.join('\n');
+
+  if (wrap) {
+    return wrapIntoSVG(sunBurstPaths);
+  }
+
+  return sunBurstPaths;
+
+  function wrapIntoSVG(paths) {
+    var depth = getDepth(tree, 0);
+    var min = depth * levelStep + initialRadius;
+    return '<svg viewBox="' + [-min, -min, min * 2, min * 2].join(' ') + '">' + 
+      '<g id="scene">' + paths + '</g>' +
+    '</svg>';
+  }
 
   function drawChildren(startAngle, endAngle, tree, pathElements, level, color, path) {
+    // TODO: Consider merging drawChildren with first recursive call.
     if (!tree.children) return;
 
     var arcLength = Math.abs(startAngle - endAngle);
@@ -178,12 +220,38 @@ function getSunBurstPath(tree, options) {
       var arcPath = pieSlice(initialRadius + level * levelStep, levelStep, startAngle, endAngle);
       var thisPath = path + ':' + i;
       child.path = thisPath;
-      pathElements.push(arc(arcPath, color, level, thisPath));
+      pathElements.push(arc(arcPath, child.color || color, level, child));
 
       drawChildren(startAngle, endAngle, child, pathElements, level + 1, color, thisPath);
 
       startAngle += da;
     });
+  }
+
+  function getColor(element, i) {
+    if (element.color) return element.color;
+
+    return colors[i % colors.length];
+  }
+
+  function arc(pathData, color, level, child) {
+    var pathMarkup = '<path d="' + pathData + '" fill="' + color + '" class="arc level-' + level + '" data-path="' + child.path + '" ';
+
+    if (stroke) {
+      pathMarkup += ' stroke="' + stroke +'" ';
+    }
+
+    if (strokeWidth) {
+      pathMarkup += ' stroke-width="' + strokeWidth + '" ';
+    }
+    if (beforeClose) {
+      pathMarkup += beforeClose(child);
+    }
+
+    pathMarkup += '></path>'
+
+
+    return pathMarkup;
   }
 }
 
@@ -224,14 +292,6 @@ function circle(r) {
   return '<circle r=' + r + ' cx=0 cy=0 fill="#fafafa" data-path="0"></circle>';
 }
 
-function arc(pathData, color) {
-  var level = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
-  var path = arguments[3];
-
-  // TODO: don't hard-code colors.
-  return '<path d="' + pathData + '" stroke="white" fill="' + color + '" class="arc level-' + level + '" data-path="' + path + '"></path>';
-}
-
 function countLeaves(treeNode) {
   if (treeNode.leaves) return treeNode.leaves;
 
@@ -245,6 +305,28 @@ function countLeaves(treeNode) {
   }
   treeNode.leaves = leaves;
   return leaves;
+}
+
+function getDepth(tree) {
+  var maxDepth = 0;
+
+  visit(tree, 0);
+
+  return maxDepth;
+
+
+  function visit(tree, depth) {
+    if (tree.children) {
+      tree.children.forEach(function(child) {
+        visit(child, depth + 1);
+      });
+    }
+    if (depth > maxDepth) maxDepth = depth;
+  }
+}
+
+function getNumber(x, defaultNumber) {
+  return Number.isFinite(x) ? x : defaultNumber;
 }
 },{}],3:[function(require,module,exports){
 var onClap = require('clap.js');
@@ -265,8 +347,11 @@ var path = getSunBurstPath(tree.children[0], {
   levelStep: levelStep,
   initialRadius: initialRadius,
   // Rotate it a bit, so that part 0 starts at the top.
-  startAngle: -Math.PI / 2 - 0.21918088280859022
+  startAngle: -Math.PI / 2 - 0.21918088280859022,
+  stroke: 'white',
+  centerText: 'Click Here'
 });
+
 var scene = document.getElementById('scene');
 scene.innerHTML = path;
 

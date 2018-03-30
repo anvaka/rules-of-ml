@@ -49,8 +49,11 @@ function getSunBurstPath(tree, options) {
 
   // Below is implementation.
   var totalLeaves = countLeaves(tree);
-  var pathElements = [];
-  pathElements.push(circle(initialRadius));
+  var svgElements = [];
+  svgElements.push(circle(initialRadius));
+  if (options.centerText) {
+    svgElements.push('<text text-anchor="middle" class="center-text" y="8">' + options.centerText + '</text>');
+  }
 
   var level = 1;
 
@@ -58,20 +61,37 @@ function getSunBurstPath(tree, options) {
   tree.path = path; // TODO: Don't really need to do this?
 
   tree.children.forEach(function (child, i) {
-    var da = 2 * Math.PI * child.leaves / totalLeaves;
-    var endAngle = startAngle + da;
-    var arcPath = pieSlice(initialRadius, level * levelStep, startAngle, endAngle);
+    // if child prefers explicit placement - respect it.
+    var endAngle, thisStartAngle;
+    if (child.startAngle !== undefined && child.endAngle !== undefined) {
+      thisStartAngle = child.startAngle;
+      endAngle = child.endAngle;
+    } else {
+      // otherwise just count based on number of leaves. Note: we may end up
+      // in inconsistent state if some children use explicit placement
+      // while the other don't. Explicit placement is advanced feature,
+      // and I hope that if you use it, you understand the responsibility.
+      thisStartAngle = startAngle;
+      endAngle = startAngle + 2 * Math.PI * child.leaves / totalLeaves;
+
+      startAngle = endAngle;
+    }
+
     var thisPath = path + ':' + i;
     child.path = thisPath;
-    var baseColor = getColor(child, i); 
-    pathElements.push(arc(arcPath, baseColor, 0, thisPath, child));
 
-    drawChildren(startAngle, endAngle, child, pathElements, level, baseColor, thisPath);
+    if (thisStartAngle !== endAngle) {
+      // we don't want to draw empty slices.
+      var arcPath = pieSlice(initialRadius, level * levelStep, thisStartAngle, endAngle);
+      var baseColor = getColor(child, i); 
+      svgElements.push(arc(arcPath, baseColor, 0, child));
+    }
 
-    startAngle += da;
+    // descend to children.
+    drawChildren(thisStartAngle, endAngle, child, svgElements, level, baseColor, thisPath);
   });
 
-  var sunBurstPaths = pathElements.join('\n');
+  var sunBurstPaths = svgElements.join('\n');
 
   if (wrap) {
     return wrapIntoSVG(sunBurstPaths);
@@ -88,6 +108,7 @@ function getSunBurstPath(tree, options) {
   }
 
   function drawChildren(startAngle, endAngle, tree, pathElements, level, color, path) {
+    // TODO: Consider merging drawChildren with first recursive call.
     if (!tree.children) return;
 
     var arcLength = Math.abs(startAngle - endAngle);
@@ -98,7 +119,7 @@ function getSunBurstPath(tree, options) {
       var arcPath = pieSlice(initialRadius + level * levelStep, levelStep, startAngle, endAngle);
       var thisPath = path + ':' + i;
       child.path = thisPath;
-      pathElements.push(arc(arcPath, child.color || color, level, thisPath, child));
+      pathElements.push(arc(arcPath, child.color || color, level, child));
 
       drawChildren(startAngle, endAngle, child, pathElements, level + 1, color, thisPath);
 
@@ -112,8 +133,8 @@ function getSunBurstPath(tree, options) {
     return colors[i % colors.length];
   }
 
-  function arc(pathData, color, level, path, child) {
-    var pathMarkup = '<path d="' + pathData + '" fill="' + color + '" class="arc level-' + level + '" data-path="' + path + '" ';
+  function arc(pathData, color, level, child) {
+    var pathMarkup = '<path d="' + pathData + '" fill="' + color + '" class="arc level-' + level + '" data-path="' + child.path + '" ';
 
     if (stroke) {
       pathMarkup += ' stroke="' + stroke +'" ';

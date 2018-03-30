@@ -8,10 +8,6 @@
   <meta name="viewport" content="width=device-width">
   <title>Rules of Machine Learning - Circle</title>
   <style>
-body {
-  padding: 0;
-  margin: 0;
-}
 * {
   box-sizing: border-box;
   -webkit-touch-callout: none;
@@ -118,6 +114,9 @@ a {
 }
 
 body {
+  padding: 0;
+  margin: 0;
+  color: #212121;
   position: absolute;
   overflow: hidden;
   top: 0;
@@ -140,6 +139,11 @@ svg {
   -webkit-box-flex: 1;
       -ms-flex: 1;
           flex: 1;
+}
+svg .center-text {
+  pointer-events: none;
+  font-size: 16px;
+  fill: #212121;
 }
 
 h2, h3 {
@@ -245,7 +249,7 @@ a.fourth-part {
       <g id='scene'></g>
     </svg>
     <div class='about'>
-      This work, is a derivative of <a href='https://developers.google.com/machine-learning/rules-of-ml/'>Rules of Machine Learning</a>
+      This work is a derivative of <a href='https://developers.google.com/machine-learning/rules-of-ml/'>Rules of Machine Learning</a>
       by <a href='http://martin.zinkevich.org/'>Martin Zinkevich</a>, used under <a href='https://creativecommons.org/licenses/by/3.0/'>CC BY 3.0</a>.
       Visualizaiton created by <a href='https://twitter.com/anvaka'>Andrei Kashcha</a>
     </div>
