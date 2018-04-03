@@ -1,16 +1,16 @@
 /**
  * Copyright 2018 Andrei Kashcha (http://github.com/anvaka)
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
  * software and associated documentation files (the "Software"), to deal in the Software
  * without restriction, including without limitation the rights to use, copy, modify,
  * merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all copies
  * or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
  * PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
  * FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
@@ -21,10 +21,10 @@ module.exports = getSunBurstPath;
 /**
  * For a given tree, builds SVG path that renders SunBurst
  * diagram
- * 
+ *
  * @param {Object} tree - a regular javascript object with single
  * property: tree.children - array of tree-children.
- * 
+ *
  * @param {Object} options - see below.
  */
 function getSunBurstPath(tree, options) {
@@ -60,36 +60,7 @@ function getSunBurstPath(tree, options) {
   var path = '0';
   tree.path = path; // TODO: Don't really need to do this?
 
-  tree.children.forEach(function (child, i) {
-    // if child prefers explicit placement - respect it.
-    var endAngle, thisStartAngle;
-    if (child.startAngle !== undefined && child.endAngle !== undefined) {
-      thisStartAngle = child.startAngle;
-      endAngle = child.endAngle;
-    } else {
-      // otherwise just count based on number of leaves. Note: we may end up
-      // in inconsistent state if some children use explicit placement
-      // while the other don't. Explicit placement is advanced feature,
-      // and I hope that if you use it, you understand the responsibility.
-      thisStartAngle = startAngle;
-      endAngle = startAngle + 2 * Math.PI * child.leaves / totalLeaves;
-
-      startAngle = endAngle;
-    }
-
-    var thisPath = path + ':' + i;
-    child.path = thisPath;
-
-    if (thisStartAngle !== endAngle) {
-      // we don't want to draw empty slices.
-      var arcPath = pieSlice(initialRadius, level * levelStep, thisStartAngle, endAngle);
-      var baseColor = getColor(child, i); 
-      svgElements.push(arc(arcPath, baseColor, 0, child));
-    }
-
-    // descend to children.
-    drawChildren(thisStartAngle, endAngle, child, svgElements, level, baseColor, thisPath);
-  });
+  drawChildren(startAngle, Math.PI * 2 + startAngle, tree);
 
   var sunBurstPaths = svgElements.join('\n');
 
@@ -102,39 +73,58 @@ function getSunBurstPath(tree, options) {
   function wrapIntoSVG(paths) {
     var depth = getDepth(tree, 0);
     var min = depth * levelStep + initialRadius;
-    return '<svg viewBox="' + [-min, -min, min * 2, min * 2].join(' ') + '">' + 
+    return '<svg viewBox="' + [-min, -min, min * 2, min * 2].join(' ') + '">' +
       '<g id="scene">' + paths + '</g>' +
     '</svg>';
   }
 
-  function drawChildren(startAngle, endAngle, tree, pathElements, level, color, path) {
-    // TODO: Consider merging drawChildren with first recursive call.
+  function drawChildren(startAngle, endAngle, tree) {
     if (!tree.children) return;
 
+    var level = tree.path.split(':').length - 1; // TODO: need a better structure to store path?
     var arcLength = Math.abs(startAngle - endAngle);
-    var totalLeaves = tree.leaves;
+    var totalLeaves = 0;
+    // In first pass, we get a sense of distribution of arc lengths at this level
+    tree.children.forEach(function(child, i) {
+      if (child.startAngle === undefined && child.endAngle === undefined) {
+        totalLeaves += child.leaves;
+      }
+    });
     tree.children.forEach(function (child, i) {
-      var da = arcLength * child.leaves / totalLeaves;
-      var endAngle = startAngle + da;
-      var arcPath = pieSlice(initialRadius + level * levelStep, levelStep, startAngle, endAngle);
-      var thisPath = path + ':' + i;
-      child.path = thisPath;
-      pathElements.push(arc(arcPath, child.color || color, level, child));
+      var endAngle, thisStartAngle;
+      if (child.startAngle === undefined && child.endAngle === undefined) {
+        thisStartAngle = startAngle;
+        endAngle = startAngle + arcLength * child.leaves / totalLeaves;
+        startAngle = endAngle;
+      } else {
+        thisStartAngle = child.startAngle;
+        endAngle = child.endAngle;
+        // TODO: What should I do with elements that are based on leaves?
+      }
 
-      drawChildren(startAngle, endAngle, child, pathElements, level + 1, color, thisPath);
+      child.path = tree.path + ':' + i;
 
-      startAngle += da;
+      if (thisStartAngle !== endAngle) {
+        var arcPath = pieSlice(initialRadius + level * levelStep, levelStep, thisStartAngle, endAngle);
+        svgElements.push(arc(arcPath, child, i));
+      }
+
+      drawChildren(thisStartAngle, endAngle, child);
     });
   }
 
   function getColor(element, i) {
     if (element.color) return element.color;
 
-    return colors[i % colors.length];
+    var path = element.path.split(':'); // yeah, that's bad. Need a better structure. Array maybe?
+
+    return colors[path[1] % colors.length];
   }
 
-  function arc(pathData, color, level, child) {
-    var pathMarkup = '<path d="' + pathData + '" fill="' + color + '" class="arc level-' + level + '" data-path="' + child.path + '" ';
+  function arc(pathData, child, i) {
+// getColor(child, i), level,
+    var color = getColor(child, i);
+    var pathMarkup = '<path d="' + pathData + '" fill="' + color + '" data-path="' + child.path + '" ';
 
     if (stroke) {
       pathMarkup += ' stroke="' + stroke +'" ';

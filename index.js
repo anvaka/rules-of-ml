@@ -16,9 +16,10 @@ var path = getSunBurstPath(tree.children[0], {
   levelStep: levelStep,
   initialRadius: initialRadius,
   // Rotate it a bit, so that part 0 starts at the top.
-  startAngle: -Math.PI / 2 - 0.21918088280859022,
+  startAngle: -Math.PI / 2,
   stroke: 'white',
-  centerText: 'Click Here'
+  centerText: 'Click Here',
+  beforeClose: beforeClose
 });
 
 var scene = document.getElementById('scene');
@@ -34,6 +35,11 @@ document.querySelector('.close').addEventListener('click', closeDetails);
 
 function closeDetails() {
   textReader.hide();
+}
+
+function beforeClose(child) {
+  var level = child.path.split(':').length;
+  return ' class="arc level-' + level  +'"';
 }
 
 function handleMouseClick(e) {
