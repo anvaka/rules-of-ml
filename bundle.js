@@ -19,6 +19,7 @@ function getData() {
             endAngle: -Math.PI/2 + Math.PI/6,
             name: 'Before Machine Learning',
             label: 'Before ML',
+            renderToC: true,
             html: '\n    <p>\nThis part should help you understand whether the time is right for building a machine learning system.\n</p>\n    ',
             children: [{
               name: "Rule #1: Don’t be afraid to launch a product without machine learning.",
@@ -33,10 +34,12 @@ function getData() {
       }]
     }, {
       name: 'ML Phase I',
+      renderToC: true,
       html: 'This part is about deploying your first pipeline.',
       label: 'Deploy',
       children: [{
         name: 'Your First Pipeline',
+        renderToC: true,
         html: '\n<p>\n    Focus on your system infrastructure for your first pipeline. While it is fun to think about all the imaginative machine learning you are going to do, it will be hard to figure out what is happening if you don\u2019t first trust your pipeline.\n</p>',
         children: [{ name: 'Rule #4: Keep the first model simple and get the infrastructure right.',
           html: '\n<p>\nThe first model provides the biggest boost to your product, so it doesn\'t need to be fancy. But you will run into many more infrastructure issues than you expect. Before anyone can use your fancy new machine learning system, you have to determine:\n</p> \n\n<ul>\n<li>How to get examples to your learning algorithm.</li>\n<li>A first cut as to what "good" and "bad" mean to your system.</li>\n<li>How to integrate your model into your application. You can either apply the model live, or pre\xADcompute the model on examples offline and store the results in a table. For example, you might want to pre\xADclassify web pages and store the results in a table, but you might want to classify chat messages live.</li>\n</ul>\n<p>\nChoosing simple features makes it easier to ensure that:\n</p>\n\n<ul>\n<li>The features reach your learning algorithm correctly.</li>\n<li>The model learns reasonable weights.</li>\n<li>The features reach your model in the server correctly.</li>\n</ul>\n\n<p>\nOnce you have a system that does these three things reliably, you have done most of the work. Your simple model provides you with baseline metrics and a baseline behavior that you can use to test more complex models. Some teams aim for a "neutral" first launch: a first launch that explicitly de\xADprioritizes machine learning gains, to avoid getting distracted.\n</p>\n        ' }, { name: 'Rule #5: Test the infrastructure independently from the machine learning.',
@@ -45,6 +48,7 @@ function getData() {
           html: '\n<p>\nUsually the problems that machine learning is trying to solve are not completely new. \nThere is an existing system for ranking, or classifying, or whatever problem you are trying to solve. \nThis means that there are a bunch of rules and heuristics. \n<b>These same heuristics can give you a lift when tweaked with machine learning.</b> Your heuristics\nshould be mined for whatever information they have, for two reasons. First, the transition to a machine\n learned system will be smoother. Second, usually those rules contain a lot of the intuition about the \n system you don\u2019t want to throw away. There are four ways you can use an existing heuristic:\n</p>\n\n<ul>\n<li>Preprocess using the heuristic. If the feature is incredibly awesome, then this is an option. For example, if, in a spam filter, the sender has already been blacklisted, don\u2019t try to relearn what "blacklisted" means. Block the message. This approach makes the most sense in binary classification tasks.</li>\n<li>Create a feature. Directly creating a feature from the heuristic is great. For example, if you use a heuristic to compute a relevance score for a query result, you can include the score as the value of a feature. Later on you may want to use machine learning techniques to massage the value (for example, converting the value into one of a finite set of discrete values, or combining it with other features) but start by using the raw value produced by the heuristic.</li>\n<li>Mine the raw inputs of the heuristic. If there is a heuristic for apps that combines the number of installs, the number of characters in the text, and the day of the week, then consider pulling these pieces apart, and feeding these inputs into the learning separately. Some techniques that apply to ensembles apply here (see <a href=\'#\' data-path=\'0:3:0:2\'>Rule #40</a>).</li>\n<li>Modify the label. This is an option when you feel that the heuristic captures information not currently contained in the label. For example, if you are trying to maximize the number of downloads, but you also want quality content, then maybe the solution is to multiply the label by the average number of stars the app received. There is a lot of leeway here. See <a href=\'#\' data-path=\'0:1:2\'>"Your First Objective"</a>.</li>\n</ul>\n<p>\nDo be mindful of the added complexity when using heuristics in an ML system. Using old heuristics in your new machine learning algorithm can help to create a smooth transition, but think about whether there is a simpler way to accomplish the same effect.\n</p>\n' }]
       }, {
         name: 'Monitoring',
+        renderToC: true,
         html: '<p>In general, practice good alerting hygiene, such as making alerts actionable and having a dashboard page.\n</p>',
         children: [{ name: 'Rule #8: Know the freshness requirements of your system.',
           html: '<p>How much does performance degrade if you have a model that is a day old? A week old? A quarter old? This information can help you to understand the priorities of your monitoring. If you lose significant product quality if the model is not updated for a day, it makes sense to have an engineer watching it continuously. Most ad serving systems have new advertisements to handle every day, and must update daily. For instance, if the ML model for Google Play Search is not updated, it can have a negative impact in under a month. Some models for What\u2019s Hot in Google Plus have no post identifier in their model so they can export these models infrequently. Other models that have post identifiers are updated much more frequently. Also notice that freshness can change over time, especially when feature columns are added or removed from your model.</p>' }, { name: 'Rule #9: Detect problems before exporting models.',
@@ -53,6 +57,7 @@ function getData() {
           html: '\n        <p>If the system is large, and there are many feature columns, know who created or is maintaining each feature column. If you find that the person who understands a feature column is leaving, make sure that someone has the information. Although many feature columns have descriptive names, it\'s good to have a more detailed description of what the feature is, where it came from, and how it is expected to help.</p>' }]
       }, {
         name: 'Your First Objective',
+        renderToC: true,
         html: '\n        <p>You have many metrics, or measurements about the system that you care about,\n         but your machine learning algorithm will often require a single <b>objective, a number that your\n        algorithm is "trying" to optimize</b>. I distinguish here between objectives and metrics: a metric is any number that your system reports, which may or may not be important. \n        See also <a href=\'#\' data-path=\'0:0:0:0:0:1\'>Rule #2</a>.</p>',
         children: [{ name: 'Rule #12: Don’t overthink which objective you choose to directly optimize.',
           html: '\n<p>You want to make money, make your users happy, and make the world a better place. There are tons of metrics that you care about, and you should measure them all (see <a href=\'#\' data-path=\'0:0:0:0:0:1\'>Rule #2</a>). However, early in the machine learning process, you will notice them all going up, even those that you do not directly optimize. For instance, suppose you care about number of clicks and time spent on the site. If you optimize for number of clicks, you are likely to see the time spent increase.</p>\n\n<p>So, keep it simple and don\u2019t think too hard about balancing different metrics when you can still easily increase all the metrics. Don\u2019t take this rule too far though: do not confuse your objective with the ultimate health of the system (see <a href=\'#\' data-path=\'0:3:0:1\'>Rule #39</a>).\nAnd, <b>if you find yourself increasing the directly optimized metric, but deciding not to launch, some objective revision may be required</b>.</p>\n        ' }, { name: 'Rule #13: Choose a simple, observable and attributable metric for your first objective.',
@@ -63,9 +68,11 @@ function getData() {
     }, {
       name: 'ML Phase II',
       label: 'Iterate',
+      renderToC: true,
       html: '<p>This part is about launching and iterating while adding new features to your pipeline, how to evaluate models and training-serving skew.</p>',
       children: [{
         name: 'Feature Engineering',
+        renderToC: true,
         html: '\n      <p>In the first phase of the lifecycle of a machine learning system, the\nimportant issues are to get the training data into the learning system, get any\nmetrics of interest instrumented, and create a serving infrastructure. <strong>After\nyou have a working end to end system with unit and system tests instrumented,\nPhase II begins.</strong></p>\n<p>In the second phase, there is a lot of low-hanging fruit. There are a variety\nof obvious features that could be pulled into the system. Thus, the second\nphase of machine learning involves pulling in as many features as possible and\ncombining them in intuitive ways. During this phase, all of the metrics should\nstill be rising. There will be lots of launches, and it is a great time to\npull in lots of engineers that can join up all the data that you need to\ncreate a truly awesome learning system.</p>',
         children: [{ name: 'Rule #16: Plan to launch and iterate.',
           html: '\n      <p>Don\u2019t expect that the model you are working on now will be the last one that\n      you will launch, or even that you will ever stop launching models. Thus\n      consider whether the complexity you are adding with this launch will slow down\n      future launches. Many teams have launched a model per quarter or more for\n      years. There are three basic reasons to launch new models:</p>\n      <ul>\n<li>You are coming up with new features.</li>\n<li>You are tuning regularization and combining old features in new ways.</li>\n<li>You are tuning the objective.</li>\n</ul>\n<p>Regardless, giving a model a bit of love can be good: looking over the data\nfeeding into the example can help find new signals as well as old, broken\nones. So, as you build your model, think about how easy it is to add or remove\nor recombine features. Think about how easy it is to create a fresh copy of\nthe pipeline and verify its correctness. Think about whether it is possible to\nhave two or three copies running in parallel. Finally, don\u2019t worry about\nwhether feature 16 of 35 makes it into this version of the pipeline. You\u2019ll\nget it next quarter.</p>'
@@ -79,6 +86,7 @@ function getData() {
       }, {
         name: 'Human Analysis of the System',
         html: '<p>Before going on to the third phase of machine learning, it is important to\n      focus on something that is not taught in any machine learning class: how to\n      look at an existing model, and improve it. This is more of an art than a\n      science, and yet there are several anti\xADpatterns that it helps to avoid.</p>',
+        renderToC: true,
         children: [{ name: 'Rule #23: You are not a typical end user.',
           html: '<p>This is perhaps the easiest way for a team to get bogged down. While there are\n      a lot of benefits to fishfooding (using a prototype within your team) and\n      dogfooding (using a prototype within your company), employees should look at\n      whether the performance is correct. While a change which is obviously bad\n      should not be used, anything that looks reasonably near production should be\n      tested further, either by paying laypeople to answer questions on a\n      crowdsourcing platform, or through a live experiment on real users.</p>\n      <p>There are two reasons for this. The first is that you are too close to the\ncode. You may be looking for a particular aspect of the posts, or you are\nsimply too emotionally involved (e.g. confirmation bias). The second is that\nyour time is too valuable. Consider the cost of nine engineers sitting in a one\nhour meeting, and think of how many contracted human labels that buys on a\ncrowdsourcing platform.</p>\n<p>If you really want to have user feedback, <strong>use user experience\nmethodologies</strong>. Create user personas (one description is in Bill Buxton\u2019s\n<a href="https://play.google.com/store/books/details/Bill_Buxton_Sketching_User_Experiences_Getting_the?id=2vfPxocmLh0C">Sketching User Experiences</a>)\nearly in a process and do usability testing (one\ndescription is in Steve Krug\u2019s\n<a href="https://play.google.com/store/books/details/Steve_Krug_Don_t_Make_Me_Think_Revisited?id=QlduAgAAQBAJ">Don\u2019t Make Me Think</a>)\nlater. User personas\ninvolve creating a hypothetical user. For instance, if your team is all male,\nit might help to design a 35-year-old female user persona (complete with user\nfeatures), and look at the results it generates rather than 10 results for\n25-to-40 year old males. Bringing in actual people to watch their reaction to\nyour site (locally or remotely) in usability testing can also get you a fresh\nperspective.</p>' }, { name: 'Rule #24: Measure the delta between models.',
           html: '<p>One of the easiest and sometimes most useful measurements you can make before\n      any users have looked at your new model is to calculate just how different the\n      new results are from production. For instance, if you have a ranking problem,\n      run both models on a sample of queries through the entire system, and look at\n      the size of the symmetric difference of the results (weighted by ranking\n      position). If the difference is very small, then you can tell without running\n      an experiment that there will be little change. If the difference is very\n      large, then you want to make sure that the change is good. Looking over\n      queries where the symmetric difference is high can help you to understand\n      qualitatively what the change was like. Make sure, however, that the system is\n      stable. Make sure that a model when compared with itself has a low (ideally\n      zero) symmetric difference.</p>' }, { name: 'Rule #25: When choosing models, utilitarian performance trumps predictive power.',
@@ -88,6 +96,7 @@ function getData() {
           html: '\n      <p>Imagine that you have a new system that looks at every doc_id and exact_query,\n      and then calculates the probability of click for every doc for every query.\n      You find that its behavior is nearly identical to your current system in both\n      side by sides and A/B testing, so given its simplicity, you launch it.\n      However, you notice that no new apps are being shown. Why? Well, since your\n      system only shows a doc based on its own history with that query, there is no\n      way to learn that a new doc should be shown.</p>\n      <p>The only way to understand how such a system would work long-term is to have\nit train only on data acquired when the model was live. This is very\ndifficult.</p>\n      ' }]
       }, {
         name: 'Training­-Serving Skew',
+        renderToC: true,
         html: '\n      <p>Training-serving skew is a difference between performance during training and\n      performance during serving. This skew can be caused by:</p>\n      <ul>\n<li>A discrepancy between how you handle data in the training and serving pipelines.</li>\n<li>A change in the data between when you train and when you serve.</li>\n<li>A feedback loop between your model and your algorithm.</li>\n</ul>\n<p>We have observed production machine learning systems at Google with training-\nserving skew that negatively impacts performance. The best solution is to\nexplicitly monitor it so that system and data changes don\u2019t introduce skew\nunnoticed.</p>\n      ',
         children: [{ name: 'Rule #29: The best way to make sure that you train like you serve is to save the set of features used at serving time, and then pipe those features to a log to use them at training time.',
           html: '\n      <p>Even if you can\u2019t do this for every example, do it for a small fraction, such\n      that you can verify the consistency between serving and training (see\n      <a href="#" data-path=\'0:2:2:8\'>Rule #37</a>). Teams that have made this\n      measurement at Google were sometimes surprised by the results.\n      YouTube home page\n      switched to logging features at serving time with significant quality\n      improvements and a reduction in code complexity, and many teams are switching\n      their infrastructure as we speak.</p> \n      ' }, { name: 'Rule #30: Importance-weight sampled data, don’t arbitrarily drop it!',
@@ -103,9 +112,11 @@ function getData() {
     }, {
       name: 'ML Phase III',
       label: 'Explore',
+      renderToC: true,
       html: '<p>The final part is about what to do when you reach a plateau.</p>',
       children: [{
         name: 'Slowed Growth, Optimization Refinement, and Complex Models',
+        renderToC: true,
         html: '<p>There will be certain indications that the second phase is reaching a close.\n      First of all, your monthly gains will start to diminish. You will start to have\n      tradeoffs between metrics: you will see some rise and others fall in some\n      experiments. This is where it gets interesting. Since the gains are harder to\n      achieve, the machine learning has to get more sophisticated. A caveat: this\n      section has more blue-sky rules than earlier sections. We have seen many teams\n      go through the happy times of Phase I and Phase II machine learning. Once Phase\n      III has been reached, teams have to find their own path.</p>',
         children: [{ name: 'Rule #38: Don’t waste time on new features if unaligned objectives have become the issue.',
           html: '\n      <p>As your measurements plateau, your team will start to look at issues that are\noutside the scope of the objectives of your current machine learning system. As\nstated before, if the product goals are not covered by the existing algorithmic\nobjective, you need to change either your objective or your product goals. For\ninstance, you may optimize clicks, plus-ones, or downloads, but make launch\ndecisions based in part on human raters.</p>' }, { name: 'Rule #39: Launch decisions are a proxy for long-term product goals.',
@@ -465,7 +476,11 @@ function createTextReader(domEl) {
   function show(tree) {
     document.body.classList.add('content-open');
     domEl.style.display = 'flex';
-    content.innerHTML = tree.html;
+    var htmlContent = tree.html;
+    if (tree.renderToC) {
+      htmlContent += renderToC(tree);
+    }
+    content.innerHTML = htmlContent
     header.innerText = tree.name;
     content.parentElement.scrollTop = 0;
 
@@ -495,12 +510,24 @@ function createTextReader(domEl) {
   }
 }
 
+function renderToC(root) {
+  var content = ['<ul>'];
+  root.children.forEach(function(child) {
+    content.push(
+      '<li><a href="#" class="no-tooltip" data-path="' + child.path + '">' + child.name + '</a></li>'
+    )
+  })
+  content.push('</ul>')
+  return content.join('\n');
+}
+
 function handleMouseMove(e) {
   var path = e.target.getAttribute('data-path');
-  if (!path) {
+  if (!path || e.target.classList.contains('no-tooltip')) {
     tooltipManager.hide();
     return;
   }
+  
   var treeElement = getTreeElementByPath(path);
   tooltipManager.showTooltip(treeElement, e);
 }
@@ -581,7 +608,7 @@ function makeOrderedChildren(tree) {
   }
 
   function memorizeTree(tree) {
-    if (tree.startAngle === undefined) {
+    if (tree.startAngle !== 0) {
       treeMemory.push(tree);
       lookup.set(tree, treeMemory.length - 1);
     }

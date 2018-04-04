@@ -81,7 +81,11 @@ function createTextReader(domEl) {
   function show(tree) {
     document.body.classList.add('content-open');
     domEl.style.display = 'flex';
-    content.innerHTML = tree.html;
+    var htmlContent = tree.html;
+    if (tree.renderToC) {
+      htmlContent += renderToC(tree);
+    }
+    content.innerHTML = htmlContent
     header.innerText = tree.name;
     content.parentElement.scrollTop = 0;
 
@@ -111,12 +115,24 @@ function createTextReader(domEl) {
   }
 }
 
+function renderToC(root) {
+  var content = ['<ul>'];
+  root.children.forEach(function(child) {
+    content.push(
+      '<li><a href="#" class="no-tooltip" data-path="' + child.path + '">' + child.name + '</a></li>'
+    )
+  })
+  content.push('</ul>')
+  return content.join('\n');
+}
+
 function handleMouseMove(e) {
   var path = e.target.getAttribute('data-path');
-  if (!path) {
+  if (!path || e.target.classList.contains('no-tooltip')) {
     tooltipManager.hide();
     return;
   }
+  
   var treeElement = getTreeElementByPath(path);
   tooltipManager.showTooltip(treeElement, e);
 }
@@ -197,7 +213,7 @@ function makeOrderedChildren(tree) {
   }
 
   function memorizeTree(tree) {
-    if (tree.startAngle === undefined) {
+    if (tree.startAngle !== 0) {
       treeMemory.push(tree);
       lookup.set(tree, treeMemory.length - 1);
     }
