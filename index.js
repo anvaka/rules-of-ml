@@ -20,7 +20,8 @@ var sceneContent = getSunBurstPath(tree.children[0], {
   startAngle: -Math.PI / 2,
   stroke: 'white',
   centerText: 'Click Here',
-  beforeClose: beforeClose
+  beforeArcClose: beforeArcClose,
+  beforeLabelClose: beforeLabelClose
 });
 
 var scene = document.body.querySelector('.diagram-container');
@@ -38,9 +39,20 @@ function closeDetails() {
   textReader.hide();
 }
 
-function beforeClose(child) {
+function beforeArcClose(child) {
   var level = child.path.split(':').length;
-  return ' class="arc level-' + level  +'"';
+  return {
+    'class': 'arc level-' + level
+  }
+}
+
+function beforeLabelClose() {
+  return {
+    text: {
+      dy: 5,
+      fill: 'white'
+    }
+  }
 }
 
 function handleMouseClick(e) {

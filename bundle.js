@@ -18,6 +18,7 @@ function getData() {
             startAngle: -Math.PI/2 - Math.PI/6,
             endAngle: -Math.PI/2 + Math.PI/6,
             name: 'Before Machine Learning',
+            label: 'Before ML',
             html: '\n    <p>\nThis part should help you understand whether the time is right for building a machine learning system.\n</p>\n    ',
             children: [{
               name: "Rule #1: Don’t be afraid to launch a product without machine learning.",
@@ -33,6 +34,7 @@ function getData() {
     }, {
       name: 'ML Phase I',
       html: 'This part is about deploying your first pipeline.',
+      label: 'Deploy',
       children: [{
         name: 'Your First Pipeline',
         html: '\n<p>\n    Focus on your system infrastructure for your first pipeline. While it is fun to think about all the imaginative machine learning you are going to do, it will be hard to figure out what is happening if you don\u2019t first trust your pipeline.\n</p>',
@@ -60,6 +62,7 @@ function getData() {
       }]
     }, {
       name: 'ML Phase II',
+      label: 'Iterate',
       html: '<p>This part is about launching and iterating while adding new features to your pipeline, how to evaluate models and training-serving skew.</p>',
       children: [{
         name: 'Feature Engineering',
@@ -99,6 +102,7 @@ function getData() {
       }]
     }, {
       name: 'ML Phase III',
+      label: 'Explore',
       html: '<p>The final part is about what to do when you reach a plateau.</p>',
       children: [{
         name: 'Slowed Growth, Optimization Refinement, and Complex Models',
@@ -162,12 +166,14 @@ function getSunBurstPath(tree, options) {
   var wrap = options.wrap;
   var stroke = options.stroke;
   var strokeWidth = options.strokeWidth;
-  var beforeClose = options.beforeClose;
+  var beforeArcClose = options.beforeArcClose;
+  var beforeLabelClose = options.beforeLabelClose;
 
   // Below is implementation.
   countLeaves(tree);
 
   var svgElements = [];
+  var defs = [];
   svgElements.push(circle(initialRadius));
   if (options.centerText) {
     svgElements.push('<text text-anchor="middle" class="center-text" y="8">' + options.centerText + '</text>');
@@ -189,9 +195,12 @@ function getSunBurstPath(tree, options) {
   function wrapIntoSVG(paths) {
     var depth = getDepth(tree, 0);
     var min = depth * levelStep + initialRadius;
-    return '<svg viewBox="' + [-min, -min, min * 2, min * 2].join(' ') + '">' +
-      '<g id="scene">' + paths + '</g>' +
-    '</svg>';
+    var markup = '<svg viewBox="' + [-min, -min, min * 2, min * 2].join(' ') + '" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">';
+    if (defs.length) {
+      markup += '<defs>' + defs.join('\n') + '</defs>';
+    }
+    markup += '<g id="scene">' + paths + '</g>' + '</svg>';
+    return markup;
   }
 
   function drawChildren(startAngle, endAngle, tree) {
@@ -206,6 +215,7 @@ function getSunBurstPath(tree, options) {
         totalLeaves += child.leaves;
       }
     });
+
     tree.children.forEach(function (child, i) {
       var endAngle, thisStartAngle;
       if (child.startAngle === undefined && child.endAngle === undefined) {
@@ -223,10 +233,42 @@ function getSunBurstPath(tree, options) {
       if (thisStartAngle !== endAngle) {
         var arcPath = pieSlice(initialRadius + level * levelStep, levelStep, thisStartAngle, endAngle);
         svgElements.push(arc(arcPath, child, i));
+
+        if (child.label) {
+          var key = child.path.replace(/:/g, '_');
+          
+          var textPath = 0 < thisStartAngle && thisStartAngle < Math.PI ? 
+            arcSegment(
+              initialRadius + (level  + 0.5)* levelStep,
+              endAngle, thisStartAngle,
+              0
+            ) :
+             arcSegment(
+              initialRadius + (level  + 0.5)* levelStep,
+              thisStartAngle, endAngle,
+              1
+            );
+          console.log(Math.abs(thisStartAngle - endAngle), thisStartAngle, child.label);
+
+          var pathMarkup = '<path d="' + textPath.d + '" id="' + key + '"></path>';
+          defs.push(pathMarkup)
+
+          var customAttributes = beforeLabelClose(child);
+          var textAttributes = (customAttributes && convertToAttributes(customAttributes.text)) || '';
+          var textPathAttributes = (customAttributes && convertToAttributes(customAttributes.textPath)) || '';
+          var labelSVGContent = '<text class="label" ' + textAttributes + '>';
+          labelSVGContent += '<textPath startOffset="50%" text-anchor="middle" xlink:href="#' + 
+            key + '" ' + textPathAttributes + '>' + child.label + '</textPath></text>'
+          svgElements.push(labelSVGContent);
+        }
       }
 
       drawChildren(thisStartAngle, endAngle, child);
     });
+  }
+
+  function needsReverse(from, to) {
+    return (0 < from && from < Math.PI) || (0 < to && to < Math.PI);
   }
 
   function getColor(element) {
@@ -248,8 +290,8 @@ function getSunBurstPath(tree, options) {
     if (strokeWidth) {
       pathMarkup += ' stroke-width="' + strokeWidth + '" ';
     }
-    if (beforeClose) {
-      pathMarkup += beforeClose(child);
+    if (beforeArcClose) {
+      pathMarkup += convertToAttributes(beforeArcClose(child));
     }
 
     pathMarkup += '></path>'
@@ -259,6 +301,17 @@ function getSunBurstPath(tree, options) {
   }
 }
 
+function convertToAttributes(obj) {
+  if (!obj) return '';
+  var bagOfAttributes = [];
+
+  Object.keys(obj).forEach(function(key) {
+    bagOfAttributes.push(key + '="' + obj[key] + '"');
+
+  });
+  return bagOfAttributes.join(' ');
+}
+
 function polarToCartesian(centerX, centerY, radius, angle) {
   return {
     x: centerX + radius * Math.cos(angle),
@@ -266,12 +319,11 @@ function polarToCartesian(centerX, centerY, radius, angle) {
   };
 }
 
-function arcSegment(radius, startAngle, endAngle) {
-  var forward = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 1;
-
+function arcSegment(radius, startAngle, endAngle, forward) {
   var cx = 0;
   var cy = 0;
 
+  forward = forward ? 1 : 0;
   var start = polarToCartesian(cx, cy, radius, startAngle);
   var end = polarToCartesian(cx, cy, radius, endAngle);
   var da = Math.abs(startAngle - endAngle);
@@ -286,7 +338,7 @@ function arcSegment(radius, startAngle, endAngle) {
 }
 
 function pieSlice(r, width, startAngle, endAngle) {
-  var inner = arcSegment(r, startAngle, endAngle);
+  var inner = arcSegment(r, startAngle, endAngle, 1);
   var out = arcSegment(r + width, endAngle, startAngle, 0);
   return inner.d + 'L' + out.start.x + ' ' + out.start.y + out.d + 'L' + inner.start.x + ' ' + inner.start.y;
 }
@@ -356,7 +408,8 @@ var sceneContent = getSunBurstPath(tree.children[0], {
   startAngle: -Math.PI / 2,
   stroke: 'white',
   centerText: 'Click Here',
-  beforeClose: beforeClose
+  beforeArcClose: beforeArcClose,
+  beforeLabelClose: beforeLabelClose
 });
 
 var scene = document.body.querySelector('.diagram-container');
@@ -374,9 +427,20 @@ function closeDetails() {
   textReader.hide();
 }
 
-function beforeClose(child) {
+function beforeArcClose(child) {
   var level = child.path.split(':').length;
-  return ' class="arc level-' + level  +'"';
+  return {
+    'class': 'arc level-' + level
+  }
+}
+
+function beforeLabelClose() {
+  return {
+    text: {
+      dy: 5,
+      fill: 'white'
+    }
+  }
 }
 
 function handleMouseClick(e) {

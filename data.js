@@ -17,6 +17,7 @@ function getData() {
             startAngle: -Math.PI/2 - Math.PI/6,
             endAngle: -Math.PI/2 + Math.PI/6,
             name: 'Before Machine Learning',
+            label: 'Before ML',
             html: '\n    <p>\nThis part should help you understand whether the time is right for building a machine learning system.\n</p>\n    ',
             children: [{
               name: "Rule #1: Don’t be afraid to launch a product without machine learning.",
@@ -32,6 +33,7 @@ function getData() {
     }, {
       name: 'ML Phase I',
       html: 'This part is about deploying your first pipeline.',
+      label: 'Deploy',
       children: [{
         name: 'Your First Pipeline',
         html: '\n<p>\n    Focus on your system infrastructure for your first pipeline. While it is fun to think about all the imaginative machine learning you are going to do, it will be hard to figure out what is happening if you don\u2019t first trust your pipeline.\n</p>',
@@ -59,6 +61,7 @@ function getData() {
       }]
     }, {
       name: 'ML Phase II',
+      label: 'Iterate',
       html: '<p>This part is about launching and iterating while adding new features to your pipeline, how to evaluate models and training-serving skew.</p>',
       children: [{
         name: 'Feature Engineering',
@@ -98,6 +101,7 @@ function getData() {
       }]
     }, {
       name: 'ML Phase III',
+      label: 'Explore',
       html: '<p>The final part is about what to do when you reach a plateau.</p>',
       children: [{
         name: 'Slowed Growth, Optimization Refinement, and Complex Models',
