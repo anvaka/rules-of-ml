@@ -183,7 +183,6 @@ function makeOrderedChildren(tree) {
 
   function getNext(treeElement) {
     return advance(treeElement, 1);
-
   }
 
   function getPrev(treeElement) {
@@ -198,8 +197,10 @@ function makeOrderedChildren(tree) {
   }
 
   function memorizeTree(tree) {
-    treeMemory.push(tree);
-    lookup.set(tree, treeMemory.length - 1);
+    if (tree.startAngle === undefined) {
+      treeMemory.push(tree);
+      lookup.set(tree, treeMemory.length - 1);
+    }
     if (tree.children) {
       tree.children.forEach(memorizeTree);
     }

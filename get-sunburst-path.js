@@ -146,10 +146,6 @@ function getSunBurstPath(tree, options) {
     });
   }
 
-  function needsReverse(from, to) {
-    return (0 < from && from < Math.PI) || (0 < to && to < Math.PI);
-  }
-
   function getColor(element) {
     if (element.color) return element.color;
 

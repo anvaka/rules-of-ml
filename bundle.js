@@ -267,10 +267,6 @@ function getSunBurstPath(tree, options) {
     });
   }
 
-  function needsReverse(from, to) {
-    return (0 < from && from < Math.PI) || (0 < to && to < Math.PI);
-  }
-
   function getColor(element) {
     if (element.color) return element.color;
 
@@ -571,7 +567,6 @@ function makeOrderedChildren(tree) {
 
   function getNext(treeElement) {
     return advance(treeElement, 1);
-
   }
 
   function getPrev(treeElement) {
@@ -586,8 +581,10 @@ function makeOrderedChildren(tree) {
   }
 
   function memorizeTree(tree) {
-    treeMemory.push(tree);
-    lookup.set(tree, treeMemory.length - 1);
+    if (tree.startAngle === undefined) {
+      treeMemory.push(tree);
+      lookup.set(tree, treeMemory.length - 1);
+    }
     if (tree.children) {
       tree.children.forEach(memorizeTree);
     }
