@@ -11,7 +11,8 @@ var tree = {
 var orderedChildren = makeOrderedChildren(tree);
 var getSunBurstPath = require('./get-sunburst-path.js');
 
-var path = getSunBurstPath(tree.children[0], {
+var sceneContent = getSunBurstPath(tree.children[0], {
+  wrap: true,
   colors: colors,
   levelStep: levelStep,
   initialRadius: initialRadius,
@@ -22,8 +23,8 @@ var path = getSunBurstPath(tree.children[0], {
   beforeClose: beforeClose
 });
 
-var scene = document.getElementById('scene');
-scene.innerHTML = path;
+var scene = document.body.querySelector('.diagram-container');
+scene.innerHTML = sceneContent;
 
 var tooltipManager = createTooltipManager(document.querySelector('.tooltip'));
 var textReader = createTextReader(document.querySelector('.content'));

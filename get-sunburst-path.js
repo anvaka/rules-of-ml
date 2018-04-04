@@ -48,14 +48,13 @@ function getSunBurstPath(tree, options) {
   var beforeClose = options.beforeClose;
 
   // Below is implementation.
-  var totalLeaves = countLeaves(tree);
+  countLeaves(tree);
+
   var svgElements = [];
   svgElements.push(circle(initialRadius));
   if (options.centerText) {
     svgElements.push('<text text-anchor="middle" class="center-text" y="8">' + options.centerText + '</text>');
   }
-
-  var level = 1;
 
   var path = '0';
   tree.path = path; // TODO: Don't really need to do this?
@@ -85,7 +84,7 @@ function getSunBurstPath(tree, options) {
     var arcLength = Math.abs(startAngle - endAngle);
     var totalLeaves = 0;
     // In first pass, we get a sense of distribution of arc lengths at this level
-    tree.children.forEach(function(child, i) {
+    tree.children.forEach(function(child) {
       if (child.startAngle === undefined && child.endAngle === undefined) {
         totalLeaves += child.leaves;
       }
@@ -113,7 +112,7 @@ function getSunBurstPath(tree, options) {
     });
   }
 
-  function getColor(element, i) {
+  function getColor(element) {
     if (element.color) return element.color;
 
     var path = element.path.split(':'); // yeah, that's bad. Need a better structure. Array maybe?
@@ -122,7 +121,6 @@ function getSunBurstPath(tree, options) {
   }
 
   function arc(pathData, child, i) {
-// getColor(child, i), level,
     var color = getColor(child, i);
     var pathMarkup = '<path d="' + pathData + '" fill="' + color + '" data-path="' + child.path + '" ';
 

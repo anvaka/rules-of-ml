@@ -1,4 +1,4 @@
-(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+(function(){function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s}return e})()({1:[function(require,module,exports){
 module.exports = getData;
 
 function getData() {
@@ -165,14 +165,13 @@ function getSunBurstPath(tree, options) {
   var beforeClose = options.beforeClose;
 
   // Below is implementation.
-  var totalLeaves = countLeaves(tree);
+  countLeaves(tree);
+
   var svgElements = [];
   svgElements.push(circle(initialRadius));
   if (options.centerText) {
     svgElements.push('<text text-anchor="middle" class="center-text" y="8">' + options.centerText + '</text>');
   }
-
-  var level = 1;
 
   var path = '0';
   tree.path = path; // TODO: Don't really need to do this?
@@ -202,7 +201,7 @@ function getSunBurstPath(tree, options) {
     var arcLength = Math.abs(startAngle - endAngle);
     var totalLeaves = 0;
     // In first pass, we get a sense of distribution of arc lengths at this level
-    tree.children.forEach(function(child, i) {
+    tree.children.forEach(function(child) {
       if (child.startAngle === undefined && child.endAngle === undefined) {
         totalLeaves += child.leaves;
       }
@@ -230,7 +229,7 @@ function getSunBurstPath(tree, options) {
     });
   }
 
-  function getColor(element, i) {
+  function getColor(element) {
     if (element.color) return element.color;
 
     var path = element.path.split(':'); // yeah, that's bad. Need a better structure. Array maybe?
@@ -239,7 +238,6 @@ function getSunBurstPath(tree, options) {
   }
 
   function arc(pathData, child, i) {
-// getColor(child, i), level,
     var color = getColor(child, i);
     var pathMarkup = '<path d="' + pathData + '" fill="' + color + '" data-path="' + child.path + '" ';
 
@@ -349,7 +347,8 @@ var tree = {
 var orderedChildren = makeOrderedChildren(tree);
 var getSunBurstPath = require('./get-sunburst-path.js');
 
-var path = getSunBurstPath(tree.children[0], {
+var sceneContent = getSunBurstPath(tree.children[0], {
+  wrap: true,
   colors: colors,
   levelStep: levelStep,
   initialRadius: initialRadius,
@@ -360,8 +359,8 @@ var path = getSunBurstPath(tree.children[0], {
   beforeClose: beforeClose
 });
 
-var scene = document.getElementById('scene');
-scene.innerHTML = path;
+var scene = document.body.querySelector('.diagram-container');
+scene.innerHTML = sceneContent;
 
 var tooltipManager = createTooltipManager(document.querySelector('.tooltip'));
 var textReader = createTextReader(document.querySelector('.content'));
