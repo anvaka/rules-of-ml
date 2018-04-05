@@ -132,7 +132,7 @@ function getSunBurstPath(tree, options) {
           var pathMarkup = '<path d="' + textPath.d + '" id="' + key + '"></path>';
           defs.push(pathMarkup)
 
-          var customAttributes = beforeLabelClose(child);
+          var customAttributes = beforeLabelClose && beforeLabelClose(child);
           var textAttributes = (customAttributes && convertToAttributes(customAttributes.text)) || '';
           var textPathAttributes = (customAttributes && convertToAttributes(customAttributes.textPath)) || '';
           var labelSVGContent = '<text class="label" ' + textAttributes + '>';
